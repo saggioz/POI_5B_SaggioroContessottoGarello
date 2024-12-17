@@ -158,9 +158,9 @@ const SETDATI = (titolo, long, lat ) => {
     });
 }
 
-let zoom = 12;
+let zoom = 6;
 let maxZoom = 19;
-let map = L.map('map').setView([45.4642, 9.1900], zoom);
+let map = L.map('map').setView([40.00, -3.00], zoom);
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: maxZoom,
