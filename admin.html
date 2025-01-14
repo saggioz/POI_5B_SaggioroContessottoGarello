@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel = "stylesheet" href = "admin.css">
+    <title>Admin</title>
+</head>
+<body>
+    <h1><strong>PROGETTO POI: LA GUERRA CIVILE SPAGNOLA</strong></h1>
+
+    <form>
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username">
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password">
+        <button type="submit">Login</button>
+    </form>
+
+    <div class="container">
+        <div class="map">
+            <h2><strong>MAPPA</strong></h2>
+            <img src="images/mappa.png" alt="Mappa">
+        </div>
+
+        <div class="table">
+            <h2><strong>Luoghi sulla mappa</strong></h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Luogo</th>
+                        <th>Data Inizio</th>
+                        <th>Data Fine</th>
+                        <th>Evento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Madrid</td>
+                        <td>Novembre 1936</td>
+                        <td>Marzo 1939</td>
+                        <td>Battaglia di Madrid</td>
+                    </tr>
+                    <tr>
+                        <td>Barcellona</td>
+                        <td>23 Dicembre 1938</td>
+                        <td>10 Febbraio 1939</td>
+                        <td>Battaglia di Catalogna</td>
+                    </tr>
+                    <tr>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="actions">
+                <button style = "background-color:green">+ AGGIUNGI</button>
+                <button style = "background-color:red">- RIMUOVI</button> 
+                <button style = "background-color:rgb(58, 193, 247)">MODIFICA</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
