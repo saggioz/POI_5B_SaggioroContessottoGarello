@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head> 
+  <meta charset="utf-8">
+  <title>Leaflet maps example</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+   crossorigin=""/>
+  <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css" />
+  <link rel = "stylesheet" href = "mappe.css">
+  <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+  <h1>Sito di gestione incidenti dei Vigili Urbani di Milano</h1>
+  <div id="form" class="container"></div>
+  <div class="modal" id="modal"></div>
+
+  <div id="app" class="container mt-3">
+    <div class="row">
+      <div class="col-md-6">
+        <div id="map"></div>
+      </div>
+      <div class="col-md-6">
+        <div>
+          <input type = "text" id = "ricerca" placeholder="Cerca l'indirizzo" class = "form-control mb-2" />
+          <button id = "bottoneRicerca" class = "btn btn-primary">Cerca</button>
+        </div>
+        <div id="table" class="table-container"></div>
+        <button id="openModalButton" class="btn btn-success">Inserisci</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""></script>
+  <script src="./mappe.css"></script>
+  <script src="./cache.js" type="module"></script>
+  <script src="./progetto.js" type="module"></script>
+  <script src="./tabella.js" type="module"></script>
+  <script src="./modal.js" type="module"></script>
+</body>
+</html>

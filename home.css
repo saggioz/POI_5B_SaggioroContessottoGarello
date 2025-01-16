@@ -1,0 +1,85 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(to right, #6a11cb, #2575fc); 
+    color: #fff;
+    padding: 20px;
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    text-align: left; 
+    margin-left: 20px;
+}
+
+.container {
+    display: flex;
+    gap: 30px;
+    margin-left: 10px;
+}
+
+.map, .table {
+    background-color: rgba(0, 0, 0, 0.5); 
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.map {
+    flex: 1.2;
+}
+
+.map img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.table {
+    flex: 1;
+    color: #fff;
+}
+
+.table h2 {
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+.table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th, .table td {
+    padding: 13px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.table th {
+    background-color: #2575fc;
+    color: #fff;
+}
+
+.table td {
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #000;
+}
+
+.admin-link {
+    position: fixed;
+    top: 20px; 
+    right: 20px; 
+    font-size: 1rem;
+    text-decoration: none;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 10px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.admin-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
