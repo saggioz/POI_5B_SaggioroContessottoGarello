@@ -15,22 +15,6 @@ const GETMAPPA = (indirizzo) => {
     });
 };
 
-
-function setCookie(name, value, maxAgeInSeconds) {
-  document.cookie = `${name}=${value}; max-age=${maxAgeInSeconds}; path=/`;
-}
-
-function getCookie(name) {
-  const cookies = document.cookie.split(';');
-  for (let i = 0; i < cookies.length; i++) {
-      let cookie = cookies[i].trim();
-      if (cookie.startsWith(name + "=")) {
-          return cookie.substring(name.length + 1);
-      }
-  }
-  return null;
-}
-
 const SETTABELLA = (data) => {
   return fetch("https://ws.cipiaceinfo.it/cache/set", {
       method: "POST",

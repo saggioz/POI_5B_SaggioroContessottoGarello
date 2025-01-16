@@ -1,99 +1,161 @@
-const TOKEN = "3819207b-2545-44f5-9bce-560b484b2f0f";
+import { table } from './tabella.js';
+import { AddMAP } from './progetto.js';
+import { GETMAPPA, SETDATI, map, zoom } from './progetto.js';
 
-const registerButton = document.getElementById("register-button");
-const loginButton = document.getElementById("login-button");
-const logoutButton = document.getElementById("logout-button");
-const privateSection = document.getElementById("private-section");
-const registerUsername = document.getElementById("register-username");
-const registerPassword = document.getElementById("register-password");
-const loginUsername = document.getElementById("login-username");
-const loginPassword = document.getElementById("login-password");
+/* Funzione per creare e gestire un form all'interno di una modale */
+const createForm = () => {
+    let data = [];
+    let callback = null;
 
-const isLogged = sessionStorage.getItem("Logged") === "true";
+    const modal = document.getElementById("modal");
+    modal.style.display = "none";
 
-if (isLogged) {
-  privateSection.classList.remove("hidden");
-}
+    const closeModal = () => {
+        modal.style.display = "none";
+    };
 
-const register = function (username, password) {
-  return fetch("https://ws.cipiaceinfo.it/credential/register", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      key: TOKEN,
-    },
-    body: JSON.stringify({ username, password }),
-  })
-    .then((response) => {
-      console.log("Stato HTTP:", response.status);
-      return response.json();
-    })
-    .then((result) => {
-      console.log("Corpo della risposta:", result);
-      if (result.result === "Ok") {
-        alert("Registrazione completata con successo!");
-        privateSection.classList.remove("hidden");
-        sessionStorage.setItem("Logged", "true");
-      } else {
-        console.error("Errore durante la registrazione:", result);
-        alert("Registrazione fallita.");
-      }
-    })
-    .catch((error) => {
-      console.error("Errore registrazione:", error);
-      alert("Registrazione fallita.");
+    const openModal = () => {
+        modal.style.display = "block";
+    };
+
+    const renderModalContent = () => {
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close-button" id="closeButton">&times;</span>
+                <div id="formContent"></div>
+                <div id="Message"></div>
+                <button type="button" class="btn btn-primary" id="submit">AGGIUNGI</button>
+                <button type="button" class="btn btn-secondary" id="cancel">ANNULLA</button>
+            </div>
+        `;
+
+        document.getElementById("closeButton").onclick = closeModal;
+        document.getElementById("cancel").onclick = closeModal;
+
+        const submitButton = document.getElementById("submit");
+        submitButton.onclick = () => {
+            const result = {};
+            let isValid = true;
+
+            data.forEach(([fieldId]) => {
+                const value = document.getElementById(fieldId).value;
+                if (!value) isValid = false;
+                result[fieldId] = value;
+            });
+
+            console.log("Dati inviati: ", result);
+
+            if (callback) {
+                callback(result);
+            }
+
+            closeModal();
+        };
+    };
+
+    return {
+        setlabels: (labels) => { data = labels; },
+        submit: (callbackInput) => { callback = callbackInput; },
+        render: () => {
+            renderModalContent();
+            const formContent = document.getElementById("formContent");
+
+            formContent.innerHTML = data.map(([label, type, options]) => {
+                if (type === "dropdown") {
+                    return `
+                        <div class="form-group">
+                            <label>${label}</label>
+                            <select id="${label}" class="form-control">
+                                ${options.map(option => `<option value="${option}">${option}</option>`).join('')}
+                            </select>
+                        </div>`;
+                }
+                return `
+                    <div class="form-group">
+                        <label>${label}</label>
+                        <input type="${type}" id="${label}" class="form-control"/>
+                    </div>`;
+            }).join("\n");
+
+            openModal();
+        },
+    };
+};
+
+const form = createForm();
+form.setlabels([
+    ["Indirizzo", "text"],
+    ["Targa1", "text"],
+    ["Targa2", "text"],
+    ["Targa3", "text"],
+    ["Data", "date"],
+    ["Orario", "time"],
+    ["Numero feriti", "number"],
+    ["Numero morti", "number"]
+]);
+
+// Callback per l'inserimento nella tabella
+form.submit((formData) => {
+    console.log("Dati inviati:", formData);
+
+    const campiObbligatori = ["Indirizzo", "Data", "Orario", "Numero feriti", "Numero morti"];
+    let isValid = true;
+
+    // Controllo dei campi obbligatori
+    campiObbligatori.forEach((fieldId) => {
+        const value = formData[fieldId];
+        if (!value) {
+            isValid = false;
+        }
     });
-};
 
-const login = function (username, password) {
-  return fetch("https://ws.cipiaceinfo.it/credential/login", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      key: TOKEN,
-    },
-    body: JSON.stringify({ username, password }),
-  })
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.result === true) {
-        alert("Login effettuato con successo!");
-        privateSection.classList.remove("hidden");
-        sessionStorage.setItem("Logged", "true");
-      } else {
-        alert("Credenziali errate.");
-      }
-    })
-    .catch((error) => {
-      console.error("Errore login:", error);
-      alert("Login fallito. Controlla le credenziali.");
-    });
-};
-
-const logout = function () {
-  sessionStorage.removeItem("Logged");
-  privateSection.classList.add("hidden");
-  alert("Logout effettuato.");
-};
-
-registerButton.onclick = () => {
-    const username = registerUsername.value;
-    const password = registerPassword.value;
-    if (username && password) {
-      register(username, password);
-    } else {
-      alert("Compila tutti i campi.");
+    if (!isValid) {
+        document.getElementById("Message").innerText = "Compilare tutti i campi obbligatori!";
+        return;
     }
-  };
-  
-  loginButton.onclick = () => {
-    const username = loginUsername.value;
-    const password = loginPassword.value;
-    if (username && password) {
-      login(username, password);
-    } else {
-      alert("Compila tutti i campi.");
-    }
-  };
 
-  logoutButton.onclick = logout;
+    const dataInserita = new Date(formData["Data"]).getTime();
+    const oggi = Date.now();
+
+    if (dataInserita < oggi) {
+        console.error("La data non può essere precedente a oggi!");
+        return;
+    }
+
+    const targhe = [
+    formData["Targa1"],
+    formData["Targa2"],
+    formData["Targa3"]
+    ].filter((targa) => targa);
+
+    const nuovaRiga = [
+        formData["Indirizzo"],
+        targhe.join(", "),
+        formData["Data"],
+        formData["Orario"],
+        formData["Numero feriti"],
+        formData["Numero morti"]
+    ];
+    table.addRow(nuovaRiga);
+
+    const indirizzo = formData["Indirizzo"];
+    const data = formData["Data"];
+    const orario = formData["Orario"];
+    const numeroFeriti = formData["Numero feriti"];
+    const numeroMorti = formData["Numero morti"];
+    const titolo = `
+        <b>Incidente</b><br/>
+        Data: ${data}<br/>
+        Orario: ${orario}<br/>
+        Numero feriti: ${numeroFeriti}<br/>
+        Numero morti: ${numeroMorti}
+    `;
+
+    AddMAP(indirizzo, titolo, GETMAPPA, SETDATI, map, zoom);
+});
+table.load();
+
+// Bottone per aprire la modale
+document.getElementById("openModalButton").onclick = () => {
+    form.render();
+};
