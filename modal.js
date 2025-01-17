@@ -2,6 +2,9 @@ import { table } from './tabella.js';
 import { AddMAP } from './progetto.js';
 import { GETMAPPA, SETDATI, map, zoom } from './progetto.js';
 
+const ModifyButton = document.getElementById("modifyButton");
+const DeleteButton = document.getElementById("deleteButton");
+
 /* Funzione per creare e gestire un form all'interno di una modale */
 const createForm = () => {
     let data = [];
@@ -90,6 +93,22 @@ form.setlabels([
     ["Evento", "text"]
 ]);
 
+ModifyButton.onclick = () => {
+    selectedRow = table.getSelectedRow();
+    const rowData = table.getRowData(selectedRow);
+    const newData = {
+        "Luogo": rowData[0],
+        "Data Inizio": rowData[1],
+        "Data Fine": rowData[2],
+        "Evento": rowData[3]
+    };
+    form.render(newData, selectedRow);
+}
+
+DeleteButton.onclick = () => {
+    const selectedRow = table.getSelectedRow();
+    table.deleteRow(selectedRow);
+}
 
 // Callback per l'inserimento nella tabella
 form.submit((formData) => {

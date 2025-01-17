@@ -29,6 +29,20 @@ const createTable = (parentElement) => {
                 console.error("Errore durante il salvataggio della tabella nella cache:", err);
             });
         },
+        editRow: function (index, newRow) {
+            data[index] = newRow;
+            this.render();
+            SETTABELLA(data).catch((err) => {
+                console.error("Errore durante il salvataggio della tabella nella cache:", err);
+            });
+        },
+        deleteRow: function (index) {
+            data.splice(index, 1);
+            this.render();
+            SETTABELLA(data).catch((err) => {
+                console.error("Errore durante il salvataggio della tabella nella cache:", err);
+            });
+        },
         filter: function(cerca) {
             if (cerca === "") {
                 data = originale;
@@ -52,7 +66,7 @@ const createTable = (parentElement) => {
 };
 
 const table = createTable(document.querySelector("#table"));
-table.build([["INDIRIZZO", "TARGHE COINVOLTE", "DATA", "ORA", "NUMERO FERITI", "NUMERO MORTI"]]);
+table.build([["LUOGO", "DATA INIZIO", "DATA FINE", "EVENTO"]]);
 table.load();
 
 document.getElementById("bottoneRicerca").onclick = () => {
