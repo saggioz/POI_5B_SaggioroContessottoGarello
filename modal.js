@@ -84,21 +84,18 @@ const createForm = () => {
 
 const form = createForm();
 form.setlabels([
-    ["Indirizzo", "text"],
-    ["Targa1", "text"],
-    ["Targa2", "text"],
-    ["Targa3", "text"],
-    ["Data", "date"],
-    ["Orario", "time"],
-    ["Numero feriti", "number"],
-    ["Numero morti", "number"]
+    ["Luogo", "text"],
+    ["Data Inizio", "date"],
+    ["Data Fine", "date"],
+    ["Evento", "text"]
 ]);
+
 
 // Callback per l'inserimento nella tabella
 form.submit((formData) => {
     console.log("Dati inviati:", formData);
 
-    const campiObbligatori = ["Indirizzo", "Data", "Orario", "Numero feriti", "Numero morti"];
+    const campiObbligatori = ["Luogo", "Data Inizio", "Data Fine", "Evento"];
     let isValid = true;
 
     // Controllo dei campi obbligatori
@@ -122,33 +119,23 @@ form.submit((formData) => {
         return;
     }
 
-    const targhe = [
-    formData["Targa1"],
-    formData["Targa2"],
-    formData["Targa3"]
-    ].filter((targa) => targa);
-
     const nuovaRiga = [
-        formData["Indirizzo"],
-        targhe.join(", "),
-        formData["Data"],
-        formData["Orario"],
-        formData["Numero feriti"],
-        formData["Numero morti"]
+        formData["Luogo"],
+        formData["Data Inizio"],
+        formData["Data Fine"],
+        formData["Evento"]
     ];
     table.addRow(nuovaRiga);
 
-    const indirizzo = formData["Indirizzo"];
-    const data = formData["Data"];
-    const orario = formData["Orario"];
-    const numeroFeriti = formData["Numero feriti"];
-    const numeroMorti = formData["Numero morti"];
+    const luogo = formData["Luogo"];
+    const data_inizio = formData["Data Inizio"];
+    const data_fine = formData["Data Fine"];
+    const event = formData["Evento"];
     const titolo = `
-        <b>Incidente</b><br/>
-        Data: ${data}<br/>
-        Orario: ${orario}<br/>
-        Numero feriti: ${numeroFeriti}<br/>
-        Numero morti: ${numeroMorti}
+        <b>${luogo}</b><br/>
+        Data Inizio: ${data_inizio}<br/>
+        Data Fine: ${data_fine}<br/>
+        Evento: ${event}<br/>
     `;
 
     AddMAP(indirizzo, titolo, GETMAPPA, SETDATI, map, zoom);
