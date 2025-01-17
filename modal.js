@@ -11,6 +11,10 @@ const createForm = () => {
     let callback = null;
 
     const modal = document.getElementById("modal");
+    if (!modal) {
+        console.error("Elemento modale non trovato!");
+        return;
+    }
     modal.style.display = "none";
 
     const closeModal = () => {
@@ -59,7 +63,7 @@ const createForm = () => {
     return {
         setlabels: (labels) => { data = labels; },
         submit: (callbackInput) => { callback = callbackInput; },
-        render: () => {
+        render: (selectedElement = null) => {
             renderModalContent();
             const formContent = document.getElementById("formContent");
 
@@ -80,6 +84,16 @@ const createForm = () => {
                     </div>`;
             }).join("\n");
 
+            if (selectedElement) {
+                // Popola il form con i dati dell'elemento selezionato
+                data.forEach(([fieldId]) => {
+                    const cell = selectedElement.querySelector(`[data-field="${fieldId}"]`);
+                    if (cell) {
+                        document.getElementById(fieldId).value = cell.innerText;
+                    }
+                });
+            }
+
             openModal();
         },
     };
@@ -92,23 +106,6 @@ form.setlabels([
     ["Data Fine", "date"],
     ["Evento", "text"]
 ]);
-
-ModifyButton.onclick = () => {
-    selectedRow = table.getSelectedRow();
-    const rowData = table.getRowData(selectedRow);
-    const newData = {
-        "Luogo": rowData[0],
-        "Data Inizio": rowData[1],
-        "Data Fine": rowData[2],
-        "Evento": rowData[3]
-    };
-    form.render(newData, selectedRow);
-}
-
-DeleteButton.onclick = () => {
-    const selectedRow = table.getSelectedRow();
-    table.deleteRow(selectedRow);
-}
 
 // Callback per l'inserimento nella tabella
 form.submit((formData) => {
@@ -130,7 +127,7 @@ form.submit((formData) => {
         return;
     }
 
-    const dataInserita = new Date(formData["Data"]).getTime();
+    const dataInserita = new Date(formData["Data Inizio"]).getTime();
     const oggi = Date.now();
 
     if (dataInserita < oggi) {
@@ -157,9 +154,93 @@ form.submit((formData) => {
         Evento: ${event}<br/>
     `;
 
-    AddMAP(indirizzo, titolo, GETMAPPA, SETDATI, map, zoom);
+    AddMAP(luogo, titolo, GETMAPPA, SETDATI, map, zoom);
 });
 table.load();
+
+const createPromptModal = (title, callback) => {
+    const modal = document.createElement("div");
+    modal.classList.add("modal");
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="close-button" id="closePromptButton">&times;</span>
+            <h2>${title}</h2>
+            <div class="form-group">
+                <label for="promptInput">Luogo</label>
+                <input type="text" id="promptInput" class="form-control"/>
+            </div>
+            <div id="promptMessage"></div>
+            <button type="button" class="btn btn-primary" id="promptSubmit">OK</button>
+            <button type="button" class="btn btn-secondary" id="promptCancel">Annulla</button>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closePromptModal = () => {
+        modal.style.display = "none";
+        document.body.removeChild(modal);
+    };
+
+    document.getElementById("closePromptButton").onclick = closePromptModal;
+    document.getElementById("promptCancel").onclick = closePromptModal;
+
+    document.getElementById("promptSubmit").onclick = () => {
+        const luogo = document.getElementById("promptInput").value;
+        if (luogo) {
+            callback(luogo);
+            closePromptModal();
+        } else {
+            document.getElementById("promptMessage").innerText = "Inserisci un nome valido.";
+        }
+    };
+
+    modal.style.display = "block";
+};
+
+ModifyButton.onclick = () => {
+    createPromptModal("Modifica Luogo", (luogo) => {
+        const selectedElement = getElementByLuogo(luogo);
+        if (selectedElement) {
+            form.render(selectedElement);
+        } else {
+            alert("Luogo non trovato.");
+        }
+    });
+};
+
+DeleteButton.onclick = () => {
+    createPromptModal("Elimina Luogo", (luogo) => {
+        const selectedElement = getElementByLuogo(luogo);
+        if (selectedElement) {
+            if (confirm("Sei sicuro di voler eliminare questo elemento?")) {
+                const index = getElementIndex(selectedElement);
+                table.deleteRow(index);
+            }
+        } else {
+            alert("Luogo non trovato.");
+        }
+    });
+};
+
+const getSelectedElement = () => {
+    return document.querySelector(".selected");
+};
+
+const getElementByLuogo = (luogo) => {
+    const rows = document.querySelectorAll("#table tbody tr");
+    for (let row of rows) {
+        const cell = row.querySelector('[data-field="LUOGO"]');
+        if (cell && cell.innerText === luogo) {
+            return row;
+        }
+    }
+    return null;
+};
+
+const getElementIndex = (element) => {
+    return Array.from(element.parentNode.children).indexOf(element);
+};
 
 // Bottone per aprire la modale
 document.getElementById("openModalButton").onclick = () => {
