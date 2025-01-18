@@ -136,18 +136,18 @@ form.submit((formData, index) => {
         formData["Evento"]
     ];
 
+    const luogo = formData["Luogo"];
+    const titolo = luogo;
+
     if (index !== null) {
+        const vecchioLuogo = originale[index][0];
+        removeMarker(vecchioLuogo);
         table.editRow(index, nuovaRiga);
     } else {
         table.addRow(nuovaRiga);
     }
 
-    const luogo = formData["Luogo"];
-    const data_inizio = formData["Data Inizio"];
-    const data_fine = formData["Data Fine"];
-    const event = formData["Evento"];
-    const titolo = luogo;
-
+    // Aggiungi il nuovo marker
     AddMAP(luogo, titolo, GETMAPPA, SETDATI, map, zoom);
 });
 table.load();

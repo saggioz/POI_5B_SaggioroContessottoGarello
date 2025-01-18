@@ -56,7 +56,7 @@ const GETTABELLA = () => {
     })
     .then((result) => {
       const dati = JSON.parse(result.result);
-      console.log("Tabella recuperata dalla cache:", dati);
+      console.log("Tabella recuperata dalla cache:", dati); // Log che stampa un array
       return dati;
     })
     .catch((error) => {
@@ -86,7 +86,7 @@ const GETDATI = (chiave, token) => {
   });
 };
 
-const normalizeTitle = (title) => title.trim().toLowerCase();
+const normalizeTitle = (title) => title.trim();
 
 const AddMAP = (indirizzo, titolo, GETMAPPA, SETDATI, map, zoom) => {
   GETMAPPA(indirizzo)
@@ -103,8 +103,7 @@ const AddMAP = (indirizzo, titolo, GETMAPPA, SETDATI, map, zoom) => {
           const marker = L.marker([lat, lon]).addTo(map);
           marker.bindPopup(`<b>${indirizzo}</b><br/>${titolo}</b>`);
           map.setView([lat, lon], zoom);
-          console.log(`Aggiunta del marker con titolo: ${titolo}`); // Log per debug
-          markerMap.set(normalizeTitle(titolo), marker); // Usa il titolo normalizzato
+          markerMap.set(normalizeTitle(titolo), marker); // Aggiungi il marker alla mappa
         })
         .catch((err) => {
           console.error("Errore durante il salvataggio dei dati:", err);
@@ -116,16 +115,29 @@ const AddMAP = (indirizzo, titolo, GETMAPPA, SETDATI, map, zoom) => {
 };
 
 const removeMarker = (titolo) => {
-  const marker = markerMap.get(normalizeTitle(titolo)); // Usa il titolo normalizzato
+  const normalizedTitle = normalizeTitle(titolo);
+  const marker = markerMap.get(normalizedTitle);
   if (marker) {
-    console.log(`Rimuovendo il marker: ${titolo}`); // Log per verifica
     map.removeLayer(marker);
-    markerMap.delete(normalizeTitle(titolo));
+    markerMap.delete(normalizedTitle);
+    // Aggiorna i dati dei marker nella cache
+    GETDATI(chiave, token).then((posti) => {
+      const nuoviDati = posti.filter(posto => normalizeTitle(posto.name) !== normalizedTitle);
+      SETTABELLA(nuoviDati).catch((err) => {
+        console.error("Errore durante l'aggiornamento dei dati nella cache:", err);
+      });
+    });
   } else {
-    console.log(`Nessun marker trovato per il titolo: ${titolo}`); // Log per verifica
+    console.error(`Marker con titolo "${normalizedTitle}" non trovato.`);
   }
 };
 
+const clearAllMarkers = () => {
+  markerMap.forEach((marker) => {
+    map.removeLayer(marker);
+  });
+  markerMap.clear();
+};
 
 const SETDATI = (titolo, long, lat) => {
   return new Promise((resolve, reject) => {
@@ -170,17 +182,17 @@ L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 function render() {
   GETDATI(chiave, token).then((posti) => {
-    console.log(posti);
+    console.log(posti); // Log che stampa un array
     posti.forEach((posto) => {
       const marker = L.marker(posto.coords).addTo(map);
       marker.bindPopup(`<b>${posto.name}</b>`);
-      markerMap.set(posto.name, marker); // Aggiungi il marker alla mappa
+      markerMap.set(normalizeTitle(posto.name), marker); // Aggiungi il marker alla mappa
     });
   });
 }
 
 render();
 
-export { AddMAP, removeMarker };
+export { AddMAP, removeMarker, clearAllMarkers };
 export { GETMAPPA, SETDATI, map, zoom };
 export { SETTABELLA, GETTABELLA };
