@@ -1,4 +1,6 @@
 import { SETTABELLA, GETTABELLA } from './progetto.js';
+import { removeMarker } from './progetto.js';
+
 const createTable = (parentElement) => {
     let data = [];
     let headers = [];
@@ -12,16 +14,16 @@ const createTable = (parentElement) => {
         render: () => {
             let htmlTable = "<table class='table table-bordered'>";
             htmlTable += "<thead><tr>" + headers.map((header) => `<th>${header}</th>`).join("") + "</tr></thead>";
-            htmlTable += "<tr>" + data[0].map((col) => `<td>${col}</td>`).join("") + "</tr>";
             htmlTable += "<tbody>" + 
-                data.slice(1).map((row) => 
-                    "<tr>" + row.map((col) => 
-                        `<td>${col}</td>`
-                    ).join("") + "</tr>"
-                ).join("") + "</tbody>";
+                data.map((row, index) => 
+                    `<tr data-index="${index}">
+                        ${row.map((col) => `<td>${col}</td>`).join("")}
+                    </tr>`
+                ).join("") + 
+            "</tbody>";
             htmlTable += "</table>";
             parentElement.innerHTML = htmlTable;
-        },        
+        },
         addRow: function (newRow) {
             data.push(newRow);
             this.render();
@@ -37,12 +39,16 @@ const createTable = (parentElement) => {
             });
         },
         deleteRow: function (index) {
+            const titolo = data[index][0].trim(); // Rimuove spazi all'inizio e alla fine
+            console.log(`Rimozione del marker con titolo: ${titolo}`); // Log per verifica
+            removeMarker(titolo);
             data.splice(index, 1);
             this.render();
             SETTABELLA(data).catch((err) => {
                 console.error("Errore durante il salvataggio della tabella nella cache:", err);
             });
         },
+   
         filter: function(cerca) {
             if (cerca === "") {
                 data = originale;

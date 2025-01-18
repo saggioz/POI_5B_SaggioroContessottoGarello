@@ -9,6 +9,7 @@ const DeleteButton = document.getElementById("deleteButton");
 const createForm = () => {
     let data = [];
     let callback = null;
+    let currentIndex = null; // Store the index of the row being modified
 
     const modal = document.getElementById("modal");
     if (!modal) {
@@ -31,7 +32,7 @@ const createForm = () => {
                 <span class="close-button" id="closeButton">&times;</span>
                 <div id="formContent"></div>
                 <div id="Message"></div>
-                <button type="button" class="btn btn-primary" id="submit">AGGIUNGI</button>
+                <button type="button" class="btn btn-primary" id="submit">SALVA</button>
                 <button type="button" class="btn btn-secondary" id="cancel">ANNULLA</button>
             </div>
         `;
@@ -53,7 +54,7 @@ const createForm = () => {
             console.log("Dati inviati: ", result);
 
             if (callback) {
-                callback(result);
+                callback(result, currentIndex); // Pass the current index to the callback
             }
 
             closeModal();
@@ -63,7 +64,8 @@ const createForm = () => {
     return {
         setlabels: (labels) => { data = labels; },
         submit: (callbackInput) => { callback = callbackInput; },
-        render: (selectedElement = null) => {
+        render: (selectedElement = null, index = null) => {
+            currentIndex = index; // Set the current index
             renderModalContent();
             const formContent = document.getElementById("formContent");
 
@@ -108,7 +110,7 @@ form.setlabels([
 ]);
 
 // Callback per l'inserimento nella tabella
-form.submit((formData) => {
+form.submit((formData, index) => {
     console.log("Dati inviati:", formData);
 
     const campiObbligatori = ["Luogo", "Data Inizio", "Data Fine", "Evento"];
@@ -127,32 +129,24 @@ form.submit((formData) => {
         return;
     }
 
-    const dataInserita = new Date(formData["Data Inizio"]).getTime();
-    const oggi = Date.now();
-
-    if (dataInserita < oggi) {
-        console.error("La data non può essere precedente a oggi!");
-        return;
-    }
-
     const nuovaRiga = [
         formData["Luogo"],
         formData["Data Inizio"],
         formData["Data Fine"],
         formData["Evento"]
     ];
-    table.addRow(nuovaRiga);
+
+    if (index !== null) {
+        table.editRow(index, nuovaRiga);
+    } else {
+        table.addRow(nuovaRiga);
+    }
 
     const luogo = formData["Luogo"];
     const data_inizio = formData["Data Inizio"];
     const data_fine = formData["Data Fine"];
     const event = formData["Evento"];
-    const titolo = `
-        <b>${luogo}</b><br/>
-        Data Inizio: ${data_inizio}<br/>
-        Data Fine: ${data_fine}<br/>
-        Evento: ${event}<br/>
-    `;
+    const titolo = luogo;
 
     AddMAP(luogo, titolo, GETMAPPA, SETDATI, map, zoom);
 });
@@ -202,7 +196,8 @@ ModifyButton.onclick = () => {
     createPromptModal("Modifica Luogo", (luogo) => {
         const selectedElement = getElementByLuogo(luogo);
         if (selectedElement) {
-            form.render(selectedElement);
+            const index = getElementIndex(selectedElement);
+            form.render(selectedElement, index); // Pass the selected element and its index
         } else {
             alert("Luogo non trovato.");
         }
@@ -223,15 +218,11 @@ DeleteButton.onclick = () => {
     });
 };
 
-const getSelectedElement = () => {
-    return document.querySelector(".selected");
-};
-
 const getElementByLuogo = (luogo) => {
     const rows = document.querySelectorAll("#table tbody tr");
     for (let row of rows) {
-        const cell = row.querySelector('[data-field="LUOGO"]');
-        if (cell && cell.innerText === luogo) {
+        const cell = row.cells[0];
+        if (cell && cell.innerText.trim().toLowerCase() === luogo.trim().toLowerCase()) {
             return row;
         }
     }
@@ -242,7 +233,6 @@ const getElementIndex = (element) => {
     return Array.from(element.parentNode.children).indexOf(element);
 };
 
-// Bottone per aprire la modale
 document.getElementById("openModalButton").onclick = () => {
     form.render();
 };

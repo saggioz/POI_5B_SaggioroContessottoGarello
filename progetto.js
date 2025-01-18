@@ -2,6 +2,8 @@ const chiave = "mappa";
 const token = "3819207b-2545-44f5-9bce-560b484b2f0f";
 const chiaveTabella = "tableData";
 
+const markerMap = new Map(); // Mappa per tenere traccia dei marker
+
 const GETMAPPA = (indirizzo) => {
   return new Promise((resolve, reject) => {
     fetch(
@@ -84,6 +86,8 @@ const GETDATI = (chiave, token) => {
   });
 };
 
+const normalizeTitle = (title) => title.trim().toLowerCase();
+
 const AddMAP = (indirizzo, titolo, GETMAPPA, SETDATI, map, zoom) => {
   GETMAPPA(indirizzo)
     .then((result) => {
@@ -99,6 +103,8 @@ const AddMAP = (indirizzo, titolo, GETMAPPA, SETDATI, map, zoom) => {
           const marker = L.marker([lat, lon]).addTo(map);
           marker.bindPopup(`<b>${indirizzo}</b><br/>${titolo}</b>`);
           map.setView([lat, lon], zoom);
+          console.log(`Aggiunta del marker con titolo: ${titolo}`); // Log per debug
+          markerMap.set(normalizeTitle(titolo), marker); // Usa il titolo normalizzato
         })
         .catch((err) => {
           console.error("Errore durante il salvataggio dei dati:", err);
@@ -108,6 +114,18 @@ const AddMAP = (indirizzo, titolo, GETMAPPA, SETDATI, map, zoom) => {
       console.error("Errore durante la ricerca dell'indirizzo:", err);
     });
 };
+
+const removeMarker = (titolo) => {
+  const marker = markerMap.get(normalizeTitle(titolo)); // Usa il titolo normalizzato
+  if (marker) {
+    console.log(`Rimuovendo il marker: ${titolo}`); // Log per verifica
+    map.removeLayer(marker);
+    markerMap.delete(normalizeTitle(titolo));
+  } else {
+    console.log(`Nessun marker trovato per il titolo: ${titolo}`); // Log per verifica
+  }
+};
+
 
 const SETDATI = (titolo, long, lat) => {
   return new Promise((resolve, reject) => {
@@ -156,12 +174,13 @@ function render() {
     posti.forEach((posto) => {
       const marker = L.marker(posto.coords).addTo(map);
       marker.bindPopup(`<b>${posto.name}</b>`);
+      markerMap.set(posto.name, marker); // Aggiungi il marker alla mappa
     });
   });
 }
 
 render();
 
-export { AddMAP };
+export { AddMAP, removeMarker };
 export { GETMAPPA, SETDATI, map, zoom };
 export { SETTABELLA, GETTABELLA };
