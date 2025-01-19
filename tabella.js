@@ -97,9 +97,4 @@ const table = createTable(document.querySelector("#table"));
 table.build([["LUOGO", "DATA INIZIO", "DATA FINE", "EVENTO"]]);
 table.load();
 
-document.getElementById("bottoneRicerca").onclick = () => {
-    const cerca = document.getElementById("ricerca").value;
-    table.filter(cerca);
-};
-
 export { table };

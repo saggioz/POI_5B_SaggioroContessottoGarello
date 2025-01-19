@@ -24,13 +24,3 @@ document.getElementById("detailButton").onclick = () => {
 const getSelectedElement = () => {
     return document.querySelector(".selected");
 };
-
-document.getElementById("home").querySelector("#bottoneRicerca").onclick = () => {
-    const cerca = document.getElementById("home").querySelector("#ricerca").value;
-    table.filter(cerca);
-};
-
-document.getElementById("admin").querySelector("#bottoneRicerca").onclick = () => {
-    const cerca = document.getElementById("admin").querySelector("#ricerca").value;
-    table.filter(cerca);
-};

@@ -1,6 +1,5 @@
 import { table } from './tabella.js';
-import { AddMAP } from './progetto.js';
-import { GETMAPPA, SETDATI, map, zoom } from './progetto.js';
+import { AddMAP, removeMarker, GETMAPPA, SETDATI, map, zoom } from './progetto.js';
 
 const ModifyButton = document.getElementById("modifyButton");
 const DeleteButton = document.getElementById("deleteButton");
@@ -52,6 +51,11 @@ const createForm = () => {
             });
 
             console.log("Dati inviati: ", result);
+
+            if (!isValid) {
+                document.getElementById("Message").innerText = "Compilare tutti i campi obbligatori!";
+                return;
+            }
 
             if (callback) {
                 callback(result, currentIndex); // Pass the current index to the callback
@@ -140,16 +144,17 @@ form.submit((formData, index) => {
     const titolo = luogo;
 
     if (index !== null) {
-        const vecchioLuogo = originale[index][0];
-        removeMarker(vecchioLuogo);
-        table.editRow(index, nuovaRiga);
+        const vecchioLuogo = table.getRow(index)[0]; // Corretto per ottenere il vecchio luogo
+        removeMarker(vecchioLuogo); // Rimuove il vecchio marker dalla mappa
+        table.editRow(index, nuovaRiga); // Modifica la riga nella tabella
     } else {
-        table.addRow(nuovaRiga);
+        table.addRow(nuovaRiga); // Aggiunge una nuova riga
     }
 
     // Aggiungi il nuovo marker
-    AddMAP(luogo, titolo, GETMAPPA, SETDATI, map, zoom);
+    AddMAP(luogo, titolo, formData["Data Inizio"], formData["Data Fine"], formData["Evento"], GETMAPPA, SETDATI, map, zoom);
 });
+
 table.load();
 
 const createPromptModal = (title, callback) => {
@@ -211,6 +216,8 @@ DeleteButton.onclick = () => {
             if (confirm("Sei sicuro di voler eliminare questo elemento?")) {
                 const index = getElementIndex(selectedElement);
                 table.deleteRow(index);
+                const luogo = selectedElement.cells[0].innerText; // Nome del luogo
+                removeMarker(luogo); // Rimuove il marker associato
             }
         } else {
             alert("Luogo non trovato.");

@@ -4,10 +4,13 @@ const chiaveTabella = "tableData";
 
 const markerMap = new Map(); // Mappa per tenere traccia dei marker
 
+// Funzione per ottenere coordinate da un indirizzo
 const GETMAPPA = (indirizzo) => {
   return new Promise((resolve, reject) => {
     fetch(
-      "https://us1.locationiq.com/v1/search?key=pk.869b0a986abed22e19f8fca6de24a2cb&q=" + indirizzo + "&format=json&"
+      "https://us1.locationiq.com/v1/search?key=pk.869b0a986abed22e19f8fca6de24a2cb&q=" +
+        indirizzo +
+        "&format=json&"
     )
       .then((r) => r.json())
       .then((r) => {
@@ -17,6 +20,7 @@ const GETMAPPA = (indirizzo) => {
   });
 };
 
+// Salvataggio della tabella nella cache
 const SETTABELLA = (data) => {
   return fetch("https://ws.cipiaceinfo.it/cache/set", {
     method: "POST",
@@ -29,17 +33,13 @@ const SETTABELLA = (data) => {
       value: JSON.stringify(data),
     }),
   })
-    .then((response) => {
-      return response.json();
-    })
-    .then((result) => {
-      console.log("Tabella salvata nella cache:", result);
-    })
+    .then((response) => response.json())
     .catch((error) => {
       console.error("Errore durante il salvataggio della tabella nella cache:", error);
     });
 };
 
+// Recupero della tabella dalla cache
 const GETTABELLA = () => {
   return fetch("https://ws.cipiaceinfo.it/cache/get", {
     method: "POST",
@@ -51,13 +51,13 @@ const GETTABELLA = () => {
       key: chiaveTabella,
     }),
   })
-    .then((response) => {
-      return response.json();
-    })
+    .then((response) => response.json())
     .then((result) => {
-      const dati = JSON.parse(result.result);
-      console.log("Tabella recuperata dalla cache:", dati); // Log che stampa un array
-      return dati;
+      try {
+        return JSON.parse(result.result) || [];
+      } catch {
+        return [];
+      }
     })
     .catch((error) => {
       console.error("Errore durante il recupero della tabella dalla cache:", error);
@@ -65,30 +65,8 @@ const GETTABELLA = () => {
     });
 };
 
-const GETDATI = (chiave, token) => {
-  return new Promise((resolve, reject) => {
-    fetch("https://ws.cipiaceinfo.it/cache/get", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        key: token,
-      },
-      body: JSON.stringify({
-        key: chiave,
-      }),
-    })
-      .then((r) => r.json())
-      .then((r) => {
-        const data = JSON.parse(r.result);
-        resolve(data);
-      })
-      .catch((error) => reject(error));
-  });
-};
-
-const normalizeTitle = (title) => title.trim();
-
-const AddMAP = (indirizzo, titolo, GETMAPPA, SETDATI, map, zoom) => {
+// Funzione per aggiungere un marker alla mappa e salvare nella cache
+const AddMAP = (indirizzo, titolo, dataInizio, dataFine, evento, GETMAPPA, SETDATI, map, zoom) => {
   GETMAPPA(indirizzo)
     .then((result) => {
       if (result.length === 0) {
@@ -98,12 +76,13 @@ const AddMAP = (indirizzo, titolo, GETMAPPA, SETDATI, map, zoom) => {
       const luogo = result[0];
       const lat = luogo.lat;
       const lon = luogo.lon;
-      SETDATI(titolo, lon, lat)
+
+      SETDATI(titolo, indirizzo, lat, lon, dataInizio, dataFine, evento)
         .then(() => {
           const marker = L.marker([lat, lon]).addTo(map);
-          marker.bindPopup(`<b>${indirizzo}</b><br/>${titolo}</b>`);
+          marker.bindPopup(`<b>${indirizzo}</b><br/>${titolo}<br/>${evento}`);
           map.setView([lat, lon], zoom);
-          markerMap.set(normalizeTitle(titolo), marker); // Aggiungi il marker alla mappa
+          markerMap.set(titolo, marker);
         })
         .catch((err) => {
           console.error("Errore durante il salvataggio dei dati:", err);
@@ -114,85 +93,107 @@ const AddMAP = (indirizzo, titolo, GETMAPPA, SETDATI, map, zoom) => {
     });
 };
 
+// Funzione per salvare i dati nella cache evitando duplicati
+const SETDATI = (titolo, indirizzo, lat, lon, dataInizio, dataFine, evento) => {
+  return GETTABELLA()
+    .then((vecchiDati) => {
+      const esiste = vecchiDati.some((posto) => posto.name === titolo);
+      if (esiste) {
+        console.warn(`Il luogo "${titolo}" esiste già nella cache.`);
+        return Promise.resolve();
+      }
+
+      const nuoviDati = [
+        ...vecchiDati,
+        {
+          name: titolo,
+          address: indirizzo,
+          coords: [lat, lon],
+          startDate: dataInizio || "N/A",
+          endDate: dataFine || "N/A",
+          event: evento || "N/A",
+        },
+      ];
+      return SETTABELLA(nuoviDati);
+    })
+    .catch((error) => {
+      console.error("Errore durante il salvataggio dei dati:", error);
+    });
+};
+
+// Funzione per visualizzare tutti i marker dalla cache
+function render() {
+  const tableBody = document.querySelector("#tableBody");
+  if (!tableBody) {
+    console.error("Elemento tableBody non trovato!");
+    return;
+  }
+
+  // Pulisce la tabella e i marker sulla mappa
+  tableBody.innerHTML = "";
+  markerMap.forEach((marker) => map.removeLayer(marker));
+  markerMap.clear();
+
+  // Recupera i dati dalla cache
+  GETTABELLA()
+    .then((posti) => {
+      console.log("Dati dalla cache:", posti);
+
+      posti.forEach((posto) => {
+        // Verifica che le coordinate siano valide
+        if (posto.coords && posto.coords.length === 2) {
+          const marker = L.marker(posto.coords).addTo(map);
+          marker.bindPopup(`<b>${posto.address}</b><br/>${posto.name}<br/>${posto.event}`);
+          markerMap.set(posto.name, marker);
+        } else {
+          console.warn(`Coordinate non valide per il posto: ${posto.name}`);
+        }
+      });
+    })
+    .catch((err) => {
+      console.error("Errore durante il recupero dei dati:", err);
+    });
+}
+
+// Funzione per rimuovere un singolo marker
 const removeMarker = (titolo) => {
-  const normalizedTitle = normalizeTitle(titolo);
-  const marker = markerMap.get(normalizedTitle);
+  const marker = markerMap.get(titolo);
+
   if (marker) {
     map.removeLayer(marker);
-    markerMap.delete(normalizedTitle);
-    // Aggiorna i dati dei marker nella cache
-    GETDATI(chiave, token).then((posti) => {
-      const nuoviDati = posti.filter(posto => normalizeTitle(posto.name) !== normalizedTitle);
-      SETTABELLA(nuoviDati).catch((err) => {
-        console.error("Errore durante l'aggiornamento dei dati nella cache:", err);
+    markerMap.delete(titolo);
+
+    GETTABELLA()
+      .then((posti) => {
+        const nuoviDati = posti.filter((posto) => posto.name !== titolo);
+        return SETTABELLA(nuoviDati);
+      })
+      .then(() => {
+        console.log(`Marker "${titolo}" rimosso.`);
+        render();
+      })
+      .catch((err) => {
+        console.error("Errore durante la rimozione:", err);
       });
-    });
   } else {
-    console.error(`Marker con titolo "${normalizedTitle}" non trovato.`);
+    console.error(`Marker "${titolo}" non trovato.`);
   }
 };
 
-const clearAllMarkers = () => {
-  markerMap.forEach((marker) => {
-    map.removeLayer(marker);
-  });
-  markerMap.clear();
-};
-
-const SETDATI = (titolo, long, lat) => {
-  return new Promise((resolve, reject) => {
-    GETDATI(chiave, token)
-      .then((vecchiDati) => {
-        const nuoviDati = [
-          ...vecchiDati,
-          {
-            name: titolo,
-            coords: [lat, long],
-          },
-        ];
-        fetch("https://ws.cipiaceinfo.it/cache/set", {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            key: token,
-          },
-          body: JSON.stringify({
-            key: chiave,
-            value: JSON.stringify(nuoviDati),
-          }),
-        })
-          .then((r) => r.json())
-          .then((result) => {
-            resolve(result);
-          })
-          .catch((error) => reject(error));
-      })
-      .catch((error) => reject(error));
-  });
-};
-
+// Configurazione della mappa
 let zoom = 6;
 let maxZoom = 19;
-let map = L.map('map').setView([39.50, -3.00], zoom);
+let map = L.map("map").setView([39.5, -3.0], zoom);
 
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: maxZoom,
-  attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  attribution:
+    '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 }).addTo(map);
 
-function render() {
-  GETDATI(chiave, token).then((posti) => {
-    console.log(posti); // Log che stampa un array
-    posti.forEach((posto) => {
-      const marker = L.marker(posto.coords).addTo(map);
-      marker.bindPopup(`<b>${posto.name}</b>`);
-      markerMap.set(normalizeTitle(posto.name), marker); // Aggiungi il marker alla mappa
-    });
-  });
-}
+// Assicura il rendering al caricamento del DOM
+document.addEventListener("DOMContentLoaded", () => {
+  render();
+});
 
-render();
-
-export { AddMAP, removeMarker, clearAllMarkers };
-export { GETMAPPA, SETDATI, map, zoom };
-export { SETTABELLA, GETTABELLA };
+export { AddMAP, removeMarker, GETMAPPA, SETDATI, map, zoom, SETTABELLA, GETTABELLA };
