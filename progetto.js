@@ -2,7 +2,7 @@ const chiave = "mappa";
 const token = "3819207b-2545-44f5-9bce-560b484b2f0f";
 const chiaveTabella = "tableData";
 
-const markerMap = new Map(); // Mappa per tenere traccia dei marker
+const markerMap = new Map(); // Mappa per tracciare i marker
 
 // Funzione per rimuovere HTML e spazi indesiderati dai dati
 const cleanHTML = (input) => {
@@ -15,9 +15,7 @@ const cleanHTML = (input) => {
 const GETMAPPA = (indirizzo) => {
   return new Promise((resolve, reject) => {
     fetch(
-      "https://us1.locationiq.com/v1/search?key=pk.869b0a986abed22e19f8fca6de24a2cb&q=" +
-        indirizzo +
-        "&format=json&"
+      `https://us1.locationiq.com/v1/search?key=pk.869b0a986abed22e19f8fca6de24a2cb&q=${indirizzo}&format=json`
     )
       .then((r) => r.json())
       .then((r) => resolve(r))
@@ -60,10 +58,8 @@ const GETTABELLA = () => {
     .then((result) => {
       try {
         const data = JSON.parse(result.result) || [];
-        console.log("Dati recuperati dalla cache:", data); // Log dettagliato
         return data;
       } catch {
-        console.warn("Cache vuota o dati non validi.");
         return [];
       }
     })
@@ -73,7 +69,7 @@ const GETTABELLA = () => {
     });
 };
 
-// Funzione per aggiungere un marker alla mappa e salvare nella cache
+// Funzione per aggiungere un marker alla mappa
 const AddMAP = (indirizzo, titolo, dataInizio, dataFine, evento, GETMAPPA, SETDATI, map, zoom) => {
   GETMAPPA(indirizzo)
     .then((result) => {
@@ -82,8 +78,13 @@ const AddMAP = (indirizzo, titolo, dataInizio, dataFine, evento, GETMAPPA, SETDA
         return;
       }
       const luogo = result[0];
-      const lat = luogo.lat;
-      const lon = luogo.lon;
+      const lat = luogo.lat || luogo.latitude;
+      const lon = luogo.lon || luogo.longitude;
+
+      if (!lat || !lon) {
+        console.error("Coordinate non trovate!");
+        return;
+      }
 
       const normalizedTitle = cleanHTML(titolo);
       if (markerMap.has(normalizedTitle)) {
@@ -97,6 +98,7 @@ const AddMAP = (indirizzo, titolo, dataInizio, dataFine, evento, GETMAPPA, SETDA
           marker.bindPopup(`<b>${indirizzo}</b><br/>${normalizedTitle}<br/>${evento}`);
           map.setView([lat, lon], zoom);
           markerMap.set(normalizedTitle, marker);
+          render();
         })
         .catch((err) => {
           console.error("Errore durante il salvataggio dei dati:", err);
@@ -109,72 +111,42 @@ const AddMAP = (indirizzo, titolo, dataInizio, dataFine, evento, GETMAPPA, SETDA
 
 // Funzione per salvare i dati nella cache evitando duplicati
 const SETDATI = (titolo, indirizzo, lat, lon, dataInizio, dataFine, evento) => {
-  return GETTABELLA() // Recupera i dati esistenti
+  return GETTABELLA()
     .then((vecchiDati) => {
       const normalizedTitle = cleanHTML(titolo);
 
-      // Controlla se il titolo esiste già nella cache
       const esiste = vecchiDati.some((posto) => cleanHTML(posto.name) === normalizedTitle);
       if (esiste) {
         console.warn(`Il luogo "${normalizedTitle}" esiste già nella cache.`);
         return Promise.resolve();
       }
 
-      // Accumula i nuovi dati
+      const parsedLat = parseFloat(lat);
+      const parsedLon = parseFloat(lon);
+
+      if (isNaN(parsedLat) || isNaN(parsedLon)) {
+        console.error(`Dati non validi per il luogo "${normalizedTitle}": lat/lon non validi.`);
+        return Promise.reject(new Error("Dati non validi: lat/lon non numerici."));
+      }
+
       const nuoviDati = [
-        ...vecchiDati, // Mantieni i dati esistenti
+        ...vecchiDati,
         {
           name: normalizedTitle,
           address: indirizzo,
-          coords: [lat, lon],
+          coords: [parsedLat, parsedLon],
           startDate: dataInizio || "N/A",
           endDate: dataFine || "N/A",
           event: evento || "N/A",
         },
       ];
 
-      // Salva i dati aggiornati
       return SETTABELLA(nuoviDati);
     })
     .catch((error) => {
       console.error("Errore durante il salvataggio dei dati:", error);
     });
 };
-
-// Funzione per visualizzare tutti i marker dalla cache
-function render() {
-  const tableBody = document.querySelector("#tableBody");
-  if (!tableBody) {
-    console.error("Elemento tableBody non trovato!");
-    return;
-  }
-
-  // Recupera i dati dalla cache
-  GETTABELLA()
-    .then((posti) => {
-      console.log("Dati dalla cache:", posti);
-
-      posti.forEach((posto) => {
-        const normalizedTitle = cleanHTML(posto.name);
-        if (!markerMap.has(normalizedTitle) && posto.coords && posto.coords.length === 2) {
-          markerMap.set(normalizedTitle, posto);
-        }
-      });
-
-      markerMap.forEach((posto) => {
-        const marker = L.marker(posto.coords).addTo(map);
-        marker.bindPopup(`
-          <b>${posto.address}</b><br/>
-          <a href="#detail_${posto.name}" class="marker-link">${posto.name}</a><br/>
-          ${posto.event}
-        `);
-        markerMap.set(cleanHTML(posto.name), marker);
-      });
-    })
-    .catch((err) => {
-      console.error("Errore durante il recupero dei dati:", err);
-    });
-}
 
 // Funzione per rimuovere un singolo marker
 const removeMarker = (titolo) => {
@@ -190,16 +162,47 @@ const removeMarker = (titolo) => {
         const nuoviDati = posti.filter((posto) => cleanHTML(posto.name) !== normalizedTitle);
         return SETTABELLA(nuoviDati);
       })
-      .then(() => {
-        console.log(`Marker "${normalizedTitle}" rimosso.`);
-        render();
-      })
       .catch((err) => {
         console.error("Errore durante la rimozione:", err);
       });
   } else {
     console.error(`Marker "${normalizedTitle}" non trovato.`);
   }
+};
+
+// Funzione per visualizzare i dati e aggiungere i marker salvati nella mappa
+const render = () => {
+  GETTABELLA()
+    .then((dati) => {
+      if (!dati || dati.length === 0) {
+        console.log("Nessun dato trovato nella cache.");
+        return;
+      }
+
+      // Rimuovi tutti i marker esistenti
+      markerMap.forEach((marker) => {
+        map.removeLayer(marker);
+      });
+      markerMap.clear();
+
+      dati.forEach((posto, index) => {
+        const { name, address, coords, event } = posto;
+
+        if (!name || !Array.isArray(coords) || coords.length !== 2 || coords.some(isNaN)) {
+          console.error(`Dati non validi per il luogo "${name || `indice ${index}`}": coords non valido.`);
+          return;
+        }
+
+        const [lat, lon] = coords;
+
+        const marker = L.marker([lat, lon]).addTo(map);
+        marker.bindPopup(`<b>${address}</b><br/>${name}<br/>${event}`);
+        markerMap.set(name, marker);
+      });
+    })
+    .catch((error) => {
+      console.error("Errore durante il rendering dei dati:", error);
+    });
 };
 
 // Configurazione della mappa
@@ -209,8 +212,7 @@ let map = L.map("map").setView([39.5, -3.0], zoom);
 
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: maxZoom,
-  attribution:
-    '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 }).addTo(map);
 
 // Assicura il rendering al caricamento del DOM
@@ -218,4 +220,4 @@ document.addEventListener("DOMContentLoaded", () => {
   render();
 });
 
-export { AddMAP, removeMarker, GETMAPPA, SETDATI, map, zoom, SETTABELLA, GETTABELLA, cleanHTML };
+export { AddMAP, removeMarker, GETMAPPA, SETDATI, map, zoom, SETTABELLA, GETTABELLA, cleanHTML, render };

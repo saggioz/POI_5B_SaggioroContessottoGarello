@@ -12,12 +12,6 @@ h1 {
     margin-left: 20px;
 }
 
-.container {
-    display: flex;
-    gap: 30px;
-    margin-left: 10px;
-}
-
 .map, .table {
     background-color: rgba(0, 0, 0, 0.5); 
     padding: 20px;
@@ -67,19 +61,58 @@ h1 {
     color: #000;
 }
 
-.admin-link {
-    position: fixed;
-    top: 20px; 
-    right: 20px; 
-    font-size: 1rem;
-    text-decoration: none;
-    color: #fff;
-    background: rgba(0, 0, 0, 0.5);
-    padding: 10px 15px;
+label {
+    color: black;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+  
+input, textarea, select {
+    color: black;
+    background-color: white;
+    border: 1px solid #ccc;
     border-radius: 5px;
-    transition: background-color 0.3s ease;
+    padding: 10px;
+    width: 100%;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+}
+  
+button {
+    color: white;
+    font-size: 16px;
+}
+  
+button[type="submit"] {
+    background-color: #2575fc;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+  
+button[type="button"] {
+    background-color: #757575;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
 }
 
-.admin-link:hover {
-    background: rgba(255, 255, 255, 0.2);
+h2, h4, h5, h6 {
+    color: black;
+    font-size: 20px;
+    font-weight: bold;
+    margin: 0;
+    padding: 10px 0; 
+}
+  
+.modal-header {
+    color: black;
+    background-color: white;
+    padding: 15px; 
+    font-size: 18px; 
+    text-align: center;
+    border-bottom: 1px solid #ccc;
 }
