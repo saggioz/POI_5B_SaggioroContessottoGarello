@@ -1,4 +1,4 @@
-import { SETTABELLA, GETTABELLA, removeMarker } from './progetto.js';
+import { SETTABELLA, GETTABELLA, removeMarker, cleanHTML } from './progetto.js';
 
 const createTable = (parentElement) => {
     let data = [];
@@ -61,25 +61,38 @@ const createTable = (parentElement) => {
         },
         load: function () {
             GETTABELLA()
-                .then((cachedData) => {
-                    console.log("Dati dalla cache:", cachedData);
-
-                    // Mappa i dati recuperati nel formato atteso dalla tabella
-                    originale = cachedData.map(item => {
-                        const luogo = item.name || "N/A";
-                        const dataInizio = item.startDate || "N/A";
-                        const dataFine = item.endDate || "N/A";
-                        const evento = item.event || "N/A";
-                        return [luogo, dataInizio, dataFine, evento];
-                    });
-
-                    data = [...originale]; // Copia i dati nel campo `data`
-                    this.render(); // Renderizza la tabella
-                })
-                .catch((err) => {
-                    console.error("Errore durante il caricamento dei dati dalla cache:", err);
+              .then((cachedData) => {
+                console.log("Dati recuperati dalla cache:", cachedData);
+          
+                if (!cachedData || cachedData.length === 0) {
+                  console.warn("Nessun dato trovato nella cache.");
+                  return;
+                }
+          
+                // Trasformazione e normalizzazione dei dati
+                const uniqueData = new Map(); // Usa una mappa per rimuovere duplicati
+                cachedData.forEach((item) => {
+                  const cleanedName = cleanHTML(item.name || "N/A");
+                  if (!uniqueData.has(cleanedName)) {
+                    uniqueData.set(cleanedName, [
+                      cleanedName,
+                      item.startDate || "N/A",
+                      item.endDate || "N/A",
+                      cleanHTML(item.event || "N/A"),
+                    ]);
+                  }
                 });
-        }
+          
+                // Popola i dati originali e li visualizza nella tabella
+                originale = Array.from(uniqueData.values());
+                data = [...originale];
+                console.log("Dati originali sincronizzati:", originale);
+                this.render();
+              })
+              .catch((err) => {
+                console.error("Errore durante il caricamento dei dati dalla cache:", err);
+              });
+          }
     };
 };
 

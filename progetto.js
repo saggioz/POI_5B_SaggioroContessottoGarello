@@ -4,6 +4,13 @@ const chiaveTabella = "tableData";
 
 const markerMap = new Map(); // Mappa per tenere traccia dei marker
 
+// Funzione per rimuovere HTML e spazi indesiderati dai dati
+const cleanHTML = (input) => {
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = input;
+  return tempDiv.textContent || tempDiv.innerText || "";
+};
+
 // Funzione per ottenere coordinate da un indirizzo
 const GETMAPPA = (indirizzo) => {
   return new Promise((resolve, reject) => {
@@ -13,9 +20,7 @@ const GETMAPPA = (indirizzo) => {
         "&format=json&"
     )
       .then((r) => r.json())
-      .then((r) => {
-        resolve(r);
-      })
+      .then((r) => resolve(r))
       .catch((error) => reject(error));
   });
 };
@@ -54,8 +59,11 @@ const GETTABELLA = () => {
     .then((response) => response.json())
     .then((result) => {
       try {
-        return JSON.parse(result.result) || [];
+        const data = JSON.parse(result.result) || [];
+        console.log("Dati recuperati dalla cache:", data); // Log dettagliato
+        return data;
       } catch {
+        console.warn("Cache vuota o dati non validi.");
         return [];
       }
     })
@@ -77,12 +85,18 @@ const AddMAP = (indirizzo, titolo, dataInizio, dataFine, evento, GETMAPPA, SETDA
       const lat = luogo.lat;
       const lon = luogo.lon;
 
-      SETDATI(titolo, indirizzo, lat, lon, dataInizio, dataFine, evento)
+      const normalizedTitle = cleanHTML(titolo);
+      if (markerMap.has(normalizedTitle)) {
+        console.warn(`Il marker "${normalizedTitle}" esiste già.`);
+        return;
+      }
+
+      SETDATI(normalizedTitle, indirizzo, lat, lon, dataInizio, dataFine, evento)
         .then(() => {
           const marker = L.marker([lat, lon]).addTo(map);
-          marker.bindPopup(`<b>${indirizzo}</b><br/>${titolo}<br/>${evento}`);
+          marker.bindPopup(`<b>${indirizzo}</b><br/>${normalizedTitle}<br/>${evento}`);
           map.setView([lat, lon], zoom);
-          markerMap.set(titolo, marker);
+          markerMap.set(normalizedTitle, marker);
         })
         .catch((err) => {
           console.error("Errore durante il salvataggio dei dati:", err);
@@ -95,18 +109,22 @@ const AddMAP = (indirizzo, titolo, dataInizio, dataFine, evento, GETMAPPA, SETDA
 
 // Funzione per salvare i dati nella cache evitando duplicati
 const SETDATI = (titolo, indirizzo, lat, lon, dataInizio, dataFine, evento) => {
-  return GETTABELLA()
+  return GETTABELLA() // Recupera i dati esistenti
     .then((vecchiDati) => {
-      const esiste = vecchiDati.some((posto) => posto.name === titolo);
+      const normalizedTitle = cleanHTML(titolo);
+
+      // Controlla se il titolo esiste già nella cache
+      const esiste = vecchiDati.some((posto) => cleanHTML(posto.name) === normalizedTitle);
       if (esiste) {
-        console.warn(`Il luogo "${titolo}" esiste già nella cache.`);
+        console.warn(`Il luogo "${normalizedTitle}" esiste già nella cache.`);
         return Promise.resolve();
       }
 
+      // Accumula i nuovi dati
       const nuoviDati = [
-        ...vecchiDati,
+        ...vecchiDati, // Mantieni i dati esistenti
         {
-          name: titolo,
+          name: normalizedTitle,
           address: indirizzo,
           coords: [lat, lon],
           startDate: dataInizio || "N/A",
@@ -114,6 +132,8 @@ const SETDATI = (titolo, indirizzo, lat, lon, dataInizio, dataFine, evento) => {
           event: evento || "N/A",
         },
       ];
+
+      // Salva i dati aggiornati
       return SETTABELLA(nuoviDati);
     })
     .catch((error) => {
@@ -139,15 +159,18 @@ function render() {
     .then((posti) => {
       console.log("Dati dalla cache:", posti);
 
+      const uniqueData = new Map();
       posti.forEach((posto) => {
-        // Verifica che le coordinate siano valide
-        if (posto.coords && posto.coords.length === 2) {
-          const marker = L.marker(posto.coords).addTo(map);
-          marker.bindPopup(`<b>${posto.address}</b><br/>${posto.name}<br/>${posto.event}`);
-          markerMap.set(posto.name, marker);
-        } else {
-          console.warn(`Coordinate non valide per il posto: ${posto.name}`);
+        const normalizedTitle = cleanHTML(posto.name);
+        if (!uniqueData.has(normalizedTitle) && posto.coords && posto.coords.length === 2) {
+          uniqueData.set(normalizedTitle, posto);
         }
+      });
+
+      uniqueData.forEach((posto) => {
+        const marker = L.marker(posto.coords).addTo(map);
+        marker.bindPopup(`<b>${posto.address}</b><br/>${posto.name}<br/>${posto.event}`);
+        markerMap.set(cleanHTML(posto.name), marker);
       });
     })
     .catch((err) => {
@@ -157,26 +180,27 @@ function render() {
 
 // Funzione per rimuovere un singolo marker
 const removeMarker = (titolo) => {
-  const marker = markerMap.get(titolo);
+  const normalizedTitle = cleanHTML(titolo);
+  const marker = markerMap.get(normalizedTitle);
 
   if (marker) {
     map.removeLayer(marker);
-    markerMap.delete(titolo);
+    markerMap.delete(normalizedTitle);
 
     GETTABELLA()
       .then((posti) => {
-        const nuoviDati = posti.filter((posto) => posto.name !== titolo);
+        const nuoviDati = posti.filter((posto) => cleanHTML(posto.name) !== normalizedTitle);
         return SETTABELLA(nuoviDati);
       })
       .then(() => {
-        console.log(`Marker "${titolo}" rimosso.`);
+        console.log(`Marker "${normalizedTitle}" rimosso.`);
         render();
       })
       .catch((err) => {
         console.error("Errore durante la rimozione:", err);
       });
   } else {
-    console.error(`Marker "${titolo}" non trovato.`);
+    console.error(`Marker "${normalizedTitle}" non trovato.`);
   }
 };
 
@@ -196,4 +220,4 @@ document.addEventListener("DOMContentLoaded", () => {
   render();
 });
 
-export { AddMAP, removeMarker, GETMAPPA, SETDATI, map, zoom, SETTABELLA, GETTABELLA };
+export { AddMAP, removeMarker, GETMAPPA, SETDATI, map, zoom, SETTABELLA, GETTABELLA, cleanHTML };
