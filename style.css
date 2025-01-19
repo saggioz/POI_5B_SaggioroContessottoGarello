@@ -16,7 +16,7 @@ h1 {
 /* Posiziona i bottoni di navigazione in alto a destra */
 #navigation {
    position: absolute;
-   top: 20px; /* Distanza dal bordo superiore */
+   top: 60px; /* Distanza dal bordo superiore */
    right: 20px; /* Distanza dal bordo destro */
    z-index: 20; /* Assicura che i bottoni siano sopra la login */
    display: flex;
