@@ -63,28 +63,32 @@ const createTable = (parentElement) => {
             GETTABELLA()
               .then((cachedData) => {
                 console.log("Dati recuperati dalla cache:", cachedData);
-          
+
                 if (!cachedData || cachedData.length === 0) {
                   console.warn("Nessun dato trovato nella cache.");
                   return;
                 }
-          
+
                 // Trasformazione e normalizzazione dei dati
                 const uniqueData = new Map(); // Usa una mappa per rimuovere duplicati
                 cachedData.forEach((item) => {
-                  const cleanedName = cleanHTML(item.name || "N/A");
-                  if (!uniqueData.has(cleanedName)) {
-                    uniqueData.set(cleanedName, [
-                      cleanedName,
-                      item.startDate || "N/A",
-                      item.endDate || "N/A",
-                      cleanHTML(item.event || "N/A"),
-                    ]);
+                  if (Array.isArray(item)) {
+                    uniqueData.set(item[0], item);
+                  } else {
+                    const cleanedName = cleanHTML(item.name || "N/A");
+                    if (!uniqueData.has(cleanedName)) {
+                      uniqueData.set(cleanedName, [
+                        cleanedName,
+                        item.startDate || "N/A",
+                        item.endDate || "N/A",
+                        cleanHTML(item.event || "N/A"),
+                      ]);
+                    }
                   }
                 });
-          
+
                 // Popola i dati originali e li visualizza nella tabella
-                originale = Array.from(uniqueData.values());
+                originale = Array.from(uniqueData.values()).filter(row => row[0] !== "N/A");
                 data = [...originale];
                 console.log("Dati originali sincronizzati:", originale);
                 this.render();
@@ -100,5 +104,3 @@ const createTable = (parentElement) => {
 const table = createTable(document.querySelector("#table"));
 table.build([["LUOGO", "DATA INIZIO", "DATA FINE", "EVENTO"]]);
 table.load();
-
-export { table };
