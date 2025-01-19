@@ -148,16 +148,19 @@ function render() {
     console.error("Elemento tableBody non trovato!");
     return;
   }
+
   // Recupera i dati dalla cache
   GETTABELLA()
     .then((posti) => {
       console.log("Dati dalla cache:", posti);
+
       posti.forEach((posto) => {
         const normalizedTitle = cleanHTML(posto.name);
         if (!markerMap.has(normalizedTitle) && posto.coords && posto.coords.length === 2) {
           markerMap.set(normalizedTitle, posto);
         }
       });
+
       markerMap.forEach((posto) => {
         const marker = L.marker(posto.coords).addTo(map);
         marker.bindPopup(`

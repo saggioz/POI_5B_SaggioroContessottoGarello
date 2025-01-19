@@ -104,3 +104,4 @@ const createTable = (parentElement) => {
 const table = createTable(document.querySelector("#table"));
 table.build([["LUOGO", "DATA INIZIO", "DATA FINE", "EVENTO"]]);
 table.load();
+                
