@@ -39,20 +39,6 @@ h1 {
    color: #fff;
 }
 
-/* Posiziona la sezione di login in alto */
-#admin {
-   position: fixed;
-   top: 100px;
-   left: 60%;
-   transform: translateX(-50%);
-   z-index: 10;
-   width: 80%;
-   max-width: 400px; 
-   background-color: rgba(0, 0, 0, 0.7); 
-   border-radius: 10px;
-   padding: 20px;
-}
-
 /* Centra la pagina principale */
 #app {
    padding-top: 30px; /* Distanza sufficiente per non coprire la login */
@@ -67,27 +53,37 @@ h1 {
    display: block;
 }
 
-/* Stile per il form di login */
-#admin h3 {
-   margin-bottom: 20px;
-   text-align: center;
-   font-size: 1.8rem;
-   color: #fff;
-   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+/* Posiziona la sezione di login tra il titolo e la mappa */
+#admin {
+   position: absolute;
+   top: 75px; /* Margine rispetto all'inizio della mappa */
+   left: 35%;  /*Centra orizzontalmente la login */
+   transform: translateX(-50%); /* Centra orizzontalmente la login */
+   z-index: 30; /* Assicura che la login sia sopra la mappa */
+   width: auto; /* Dimensione adattabile */
+   background: rgba(255, 255, 255, 0.1);
+   border-radius: 15px;
+   padding: 20px;
+   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+   display: flex;
+   justify-content: flex-start;
+   gap: 10px;
 }
 
+/* Stile per il form di login */
 .form-group {
-   margin-bottom: 15px;
+   margin-bottom: 0;
 }
 
 .form-group label {
    display: block;
    font-size: 1rem;
-   margin-bottom: 5px;
+   margin-bottom: 2px;
+   color: white;
 }
 
 .form-group input {
-   width: 100%;
+   width: 200px;
    padding: 10px;
    border: 1px solid #6d28d9;
    border-radius: 5px;
@@ -104,8 +100,7 @@ h1 {
 }
 
 #register-button {
-   width: 100%;
-   padding: 10px;
+   padding: 10px 20px;
    font-size: 1rem;
    background: #6d28d9;
    border: none;
