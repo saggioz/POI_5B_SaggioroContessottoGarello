@@ -7,12 +7,12 @@ const hide = (elements) => {
 
 const show = (element) => {
    element.classList.add("visible");
-   element.classList.remove("hidden");   
+   element.classList.remove("hidden");
 }
 
 export const createNavigator = (parentElement) => {
    const pages = Array.from(parentElement.querySelectorAll(".page"));
-   
+
    const render = () => {
       const url = new URL(document.location.href);
       const pageName = url.hash.replace("#", "");
@@ -22,5 +22,5 @@ export const createNavigator = (parentElement) => {
       show(selected);
    }
    window.addEventListener('popstate', render); 
-   render();   
+   render();
 }

@@ -63,12 +63,12 @@ const createTable = (parentElement) => {
             GETTABELLA()
               .then((cachedData) => {
                 console.log("Dati recuperati dalla cache:", cachedData);
-
+          
                 if (!cachedData || cachedData.length === 0) {
                   console.warn("Nessun dato trovato nella cache.");
                   return;
                 }
-
+          
                 // Trasformazione e normalizzazione dei dati
                 const uniqueData = new Map(); // Usa una mappa per rimuovere duplicati
                 cachedData.forEach((item) => {
@@ -86,7 +86,7 @@ const createTable = (parentElement) => {
                     }
                   }
                 });
-
+          
                 // Popola i dati originali e li visualizza nella tabella
                 originale = Array.from(uniqueData.values()).filter(row => row[0] !== "N/A");
                 data = [...originale];
@@ -104,4 +104,5 @@ const createTable = (parentElement) => {
 const table = createTable(document.querySelector("#table"));
 table.build([["LUOGO", "DATA INIZIO", "DATA FINE", "EVENTO"]]);
 table.load();
-                
+
+export { table };
