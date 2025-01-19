@@ -72,19 +72,23 @@ const createTable = (parentElement) => {
                 // Trasformazione e normalizzazione dei dati
                 const uniqueData = new Map(); // Usa una mappa per rimuovere duplicati
                 cachedData.forEach((item) => {
-                  const cleanedName = cleanHTML(item.name || "N/A");
-                  if (!uniqueData.has(cleanedName)) {
-                    uniqueData.set(cleanedName, [
-                      cleanedName,
-                      item.startDate || "N/A",
-                      item.endDate || "N/A",
-                      cleanHTML(item.event || "N/A"),
-                    ]);
+                  if (Array.isArray(item)) {
+                    uniqueData.set(item[0], item);
+                  } else {
+                    const cleanedName = cleanHTML(item.name || "N/A");
+                    if (!uniqueData.has(cleanedName)) {
+                      uniqueData.set(cleanedName, [
+                        cleanedName,
+                        item.startDate || "N/A",
+                        item.endDate || "N/A",
+                        cleanHTML(item.event || "N/A"),
+                      ]);
+                    }
                   }
                 });
           
                 // Popola i dati originali e li visualizza nella tabella
-                originale = Array.from(uniqueData.values());
+                originale = Array.from(uniqueData.values()).filter(row => row[0] !== "N/A");
                 data = [...originale];
                 console.log("Dati originali sincronizzati:", originale);
                 this.render();

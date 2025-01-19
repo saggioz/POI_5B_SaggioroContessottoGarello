@@ -149,27 +149,25 @@ function render() {
     return;
   }
 
-  // Pulisce la tabella e i marker sulla mappa
-  tableBody.innerHTML = "";
-  markerMap.forEach((marker) => map.removeLayer(marker));
-  markerMap.clear();
-
   // Recupera i dati dalla cache
   GETTABELLA()
     .then((posti) => {
       console.log("Dati dalla cache:", posti);
 
-      const uniqueData = new Map();
       posti.forEach((posto) => {
         const normalizedTitle = cleanHTML(posto.name);
-        if (!uniqueData.has(normalizedTitle) && posto.coords && posto.coords.length === 2) {
-          uniqueData.set(normalizedTitle, posto);
+        if (!markerMap.has(normalizedTitle) && posto.coords && posto.coords.length === 2) {
+          markerMap.set(normalizedTitle, posto);
         }
       });
 
-      uniqueData.forEach((posto) => {
+      markerMap.forEach((posto) => {
         const marker = L.marker(posto.coords).addTo(map);
-        marker.bindPopup(`<b>${posto.address}</b><br/>${posto.name}<br/>${posto.event}`);
+        marker.bindPopup(`
+          <b>${posto.address}</b><br/>
+          <a href="#detail_${posto.name}" class="marker-link">${posto.name}</a><br/>
+          ${posto.event}
+        `);
         markerMap.set(cleanHTML(posto.name), marker);
       });
     })
