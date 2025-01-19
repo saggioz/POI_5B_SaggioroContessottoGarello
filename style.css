@@ -1,7 +1,154 @@
-.visible {
-    display: block;
- }
+body {
+   margin: 0;
+   font-family: 'Roboto', sans-serif;
+   background: linear-gradient(to bottom right, #4f46e5, #9333ea);
+   color: white;
+}
  
- .hidden {
-    display: none;
- }
+h1 {
+   text-align: center;
+   margin-top: 20px;
+   font-size: 2.5rem;
+   text-transform: uppercase;
+   text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Posiziona i bottoni di navigazione in alto a destra */
+#navigation {
+   position: absolute;
+   top: 20px; /* Distanza dal bordo superiore */
+   right: 20px; /* Distanza dal bordo destro */
+   z-index: 20; /* Assicura che i bottoni siano sopra la login */
+   display: flex;
+   gap: 10px;
+}
+
+/* Pulsanti di navigazione */
+#navigation button {
+   padding: 10px 20px;
+   font-size: 1rem;
+   color: white;
+   background: rgba(0, 0, 0, 0.5);
+   border: 2px solid #6d28d9;
+   border-radius: 20px; /* Bottoni arrotondati */
+   transition: all 0.3s ease;
+}
+
+#navigation button:hover {
+   background: #6d28d9;
+   color: #fff;
+}
+
+/* Posiziona la sezione di login in alto */
+#admin {
+   position: fixed;
+   top: 100px;
+   left: 60%;
+   transform: translateX(-50%);
+   z-index: 10;
+   width: 80%;
+   max-width: 400px; 
+   background-color: rgba(0, 0, 0, 0.7); 
+   border-radius: 10px;
+   padding: 20px;
+}
+
+/* Centra la pagina principale */
+#app {
+   padding-top: 30px; /* Distanza sufficiente per non coprire la login */
+}
+
+/* Pagine nascoste e visibili */
+.page.hidden {
+   display: none;
+}
+
+.page.visible {
+   display: block;
+}
+
+/* Stile per il form di login */
+#admin h3 {
+   margin-bottom: 20px;
+   text-align: center;
+   font-size: 1.8rem;
+   color: #fff;
+   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.form-group {
+   margin-bottom: 15px;
+}
+
+.form-group label {
+   display: block;
+   font-size: 1rem;
+   margin-bottom: 5px;
+}
+
+.form-group input {
+   width: 100%;
+   padding: 10px;
+   border: 1px solid #6d28d9;
+   border-radius: 5px;
+   background: rgba(255, 255, 255, 0.1);
+   color: white;
+   font-size: 1rem;
+   transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+   border-color: #9333ea;
+   outline: none;
+   background: rgba(255, 255, 255, 0.2);
+}
+
+#register-button {
+   width: 100%;
+   padding: 10px;
+   font-size: 1rem;
+   background: #6d28d9;
+   border: none;
+   border-radius: 5px;
+   color: white;
+   transition: all 0.3s ease;
+}
+
+#register-button:hover {
+   background: #9333ea;
+}
+
+/* Pulsanti CRUD */
+#openModalButton, #modifyButton, #deleteButton {
+   margin: 10px 5px 0 0;
+   padding: 10px 15px;
+   border: none;
+   border-radius: 5px;
+   color: white;
+   font-size: 0.9rem;
+   transition: background-color 0.3s ease;
+}
+
+#openModalButton {
+   background-color: #10b981; /* Verde */
+}
+
+#modifyButton {
+   background-color: #f59e0b; /* Giallo */
+}
+
+#deleteButton {
+   background-color: #ef4444; /* Rosso */
+}
+
+#openModalButton:hover {
+   background-color: #059669;
+}
+
+#modifyButton:hover {
+   background-color: #d97706;
+}
+
+#deleteButton:hover {
+   background-color: #dc2626;
+}
