@@ -13,13 +13,13 @@ const createTable = (parentElement) => {
         render: () => {
             let htmlTable = "<table class='table table-bordered'>";
             htmlTable += "<thead><tr>" + headers.map((header) => `<th>${header}</th>`).join("") + "</tr></thead>";
-            htmlTable += "<tbody>" + 
-                data.map((row, index) => 
+            htmlTable += "<tbody>" +
+                data.map((row, index) =>
                     `<tr data-index="${index}">
                         ${row.map((col) => `<td>${col}</td>`).join("")}
                     </tr>`
-                ).join("") + 
-            "</tbody>";
+                ).join("") +
+                "</tbody>";
             htmlTable += "</table>";
             parentElement.innerHTML = htmlTable;
         },
@@ -43,56 +43,47 @@ const createTable = (parentElement) => {
             removeMarker(titolo); // Rimuovi il marker dalla mappa
             data.splice(index, 1);
             this.render();
-        
+
             // Aggiorna la cache dopo aver rimosso la riga
             SETTABELLA(data).catch((err) => {
                 console.error("Errore durante il salvataggio della tabella nella cache:", err);
             });
         },
-        filter: function(cerca) {
+        filter: function (cerca) {
             if (cerca === "") {
                 data = originale;
             } else {
-                data = originale.filter(row => 
+                data = originale.filter(row =>
                     row[0].toLowerCase().includes(cerca.toLowerCase())
                 );
             }
             this.render();
         },
         load: function () {
-            GETTABELLA().then((cachedData) => {
-                console.log("Dati dalla cache:", cachedData);
-        
-                originale = cachedData.filter(item => item && item.name);
-        
-                data = originale.map(item => {
-                    const parts = item.name.split("<br/>").map(part => part.trim());
-                    const luogo = parts[0].replace(/<b>|<\/b>/g, "");
-        
-                    let dataInizio = "N/A";
-                    let dataFine = "N/A";
-                    let evento = "N/A";
-        
-                    if (parts.length > 1) {
-                        dataInizio = parts[1].replace("Data Inizio: ", "");
-                    }
-                    if (parts.length > 2) {
-                        dataFine = parts[2].replace("Data Fine: ", "");
-                    }
-                    if (parts.length > 3) {
-                        evento = parts[3].replace("Evento: ", "");
-                    }
-                    return [luogo, dataInizio, dataFine, evento];
+            GETTABELLA()
+                .then((cachedData) => {
+                    console.log("Dati dalla cache:", cachedData);
+
+                    // Mappa i dati recuperati nel formato atteso dalla tabella
+                    originale = cachedData.map(item => {
+                        const luogo = item.name || "N/A";
+                        const dataInizio = item.startDate || "N/A";
+                        const dataFine = item.endDate || "N/A";
+                        const evento = item.event || "N/A";
+                        return [luogo, dataInizio, dataFine, evento];
+                    });
+
+                    data = [...originale]; // Copia i dati nel campo `data`
+                    this.render(); // Renderizza la tabella
+                })
+                .catch((err) => {
+                    console.error("Errore durante il caricamento dei dati dalla cache:", err);
                 });
-        
-                this.render();
-            }).catch((err) => {
-                console.error("Errore durante il caricamento dei dati dalla cache:", err);
-            });
         }
     };
-};        
+};
 
+// Seleziona l'elemento della tabella e inizializza
 const table = createTable(document.querySelector("#table"));
 table.build([["LUOGO", "DATA INIZIO", "DATA FINE", "EVENTO"]]);
 table.load();
